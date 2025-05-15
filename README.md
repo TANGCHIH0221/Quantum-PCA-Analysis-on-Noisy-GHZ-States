@@ -19,3 +19,8 @@
   - Fidelity vs. 原 GHZ state
 - 應用 PCA 過濾雜訊，提取主要純態
 - 簡化成一階主特徵表示（filtered pure state）
+| 比較對象                                                 | Fidelity  | 解釋                            |
+| ---------------------------------------------------- | --------- | ----------------------------- |
+| \$F(\rho\_\text{true}, \rho\_\text{noisy})\$         | **0.707** | 雜訊狀態與原 GHZ 態相似度下降（有顯著偏離）      |
+| \$F(\rho\_\text{true}, \rho\_\text{PCA-filtered})\$  | **1.000** | PCA 所萃取主純態與理想 GHZ 完全一致（完美還原）  |
+| \$F(\rho\_\text{noisy}, \rho\_\text{PCA-filtered})\$ | **0.707** | PCA 所提取純態含有雜訊狀態中**50% 主成分訊號** |
