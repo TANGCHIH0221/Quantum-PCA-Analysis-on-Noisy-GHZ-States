@@ -1,20 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import qutip # Quantum Toolbox in Python
-import time # For timing calculations
+import qutip 
+import time 
 
-# Matplotlib style for nicer plots
+
 try:
     plt.style.use('seaborn-v0_8-whitegrid')
 except Exception as e:
     print(f"Warning: Could not apply 'seaborn-v0_8-whitegrid' style. Using default. Error: {e}")
 plt.rcParams.update({'font.size': 12})
 
-# --- Configuration for N Qubits ---
-N_QUBITS = 10 # Set to 10 qubits!
-D_HILBERT = 2**N_QUBITS # Dimension of the Hilbert space
 
-# --- Plotting Functions for PCA Visualization ---
+N_QUBITS = 10 
+D_HILBERT = 2**N_QUBITS 
+
+
 def plot_eigenvalue_spectrum(eigenvalues, state_name="State", log_scale=False):
     """Plots the eigenvalue spectrum (bar chart)."""
     if eigenvalues is None:
@@ -24,9 +24,9 @@ def plot_eigenvalue_spectrum(eigenvalues, state_name="State", log_scale=False):
     num_eigenvalues = len(eigenvalues)
     indices = np.arange(num_eigenvalues)
 
-    plt.figure(figsize=(12, 7)) # Wider for more eigenvalues
+    plt.figure(figsize=(12, 7)) 
     if log_scale:
-        # Add a small epsilon for log scale if eigenvalues can be zero
+        
         plt.bar(indices, eigenvalues + 1e-18, color='skyblue', edgecolor='black', width=0.8)
         plt.yscale('log')
         plt.ylabel("Eigenvalue (Population/Weight) - Log Scale")
@@ -41,7 +41,7 @@ def plot_eigenvalue_spectrum(eigenvalues, state_name="State", log_scale=False):
     plt.title(f"Eigenvalue Spectrum for {state_name} ({num_eigenvalues} components)")
 
     if num_eigenvalues > 30:
-        tick_step = max(1, num_eigenvalues // 20) # Show roughly 20 ticks
+        tick_step = max(1, num_eigenvalues // 20) 
         plt.xticks(indices[::tick_step], rotation=45, ha='right')
     else:
         plt.xticks(indices)
@@ -56,7 +56,7 @@ def plot_cumulative_eigenvalues(eigenvalues, state_name="State"):
         print(f"Skipping cumulative eigenvalue plot for {state_name} as eigenvalues are None.")
         return
 
-    cumulative_sum = np.cumsum(eigenvalues) # Assumes eigenvalues are sorted descending
+    cumulative_sum = np.cumsum(eigenvalues) 
     indices = np.arange(1, len(eigenvalues) + 1)
 
     plt.figure(figsize=(10, 6))
@@ -74,18 +74,18 @@ def plot_cumulative_eigenvalues(eigenvalues, state_name="State"):
     plt.show()
 
 
-# --- Section 1: Quantum Objects for N Qubits ---
+
 print(f"\n--- Section 1: Quantum Objects for {N_QUBITS} Qubits ---")
 # Create list of |0> and |1> kets for tensor products
 kets0_list = [qutip.basis(2, 0) for _ in range(N_QUBITS)]
 kets1_list = [qutip.basis(2, 1) for _ in range(N_QUBITS)]
 
-# Example: |00...0> and |11...1> kets for N_QUBITS
+
 ket_all_zeros = qutip.tensor(kets0_list)
 ket_all_ones = qutip.tensor(kets1_list)
 
-# Identity operator for N_QUBITS system
-identity_Nq = qutip.identity([2] * N_QUBITS) # dims will be [[2,...2],[2,...2]]
+# Identity operator 
+identity_Nq = qutip.identity([2] * N_QUBITS)
 
 print(f"Defined {N_QUBITS}-qubit basis states (e.g., |0...0>) and identity operator (I_{D_HILBERT}).")
 print(f"Dimension of {N_QUBITS}-qubit Hilbert space: {D_HILBERT}")
@@ -93,22 +93,22 @@ print(f"Shape of {N_QUBITS}-qubit identity operator: {identity_Nq.shape}")
 print(f"Dims of {N_QUBITS}-qubit identity operator: {identity_Nq.dims}")
 
 
-# --- Section 2: PCA-like Analysis of Density Matrices (Eigendecomposition) ---
+
 def analyze_density_matrix_pca(rho_qobj, state_name="State"):
     if not isinstance(rho_qobj, qutip.Qobj) or not rho_qobj.isoper:
-        # ... (Robust conversion and error handling for NumPy arrays - keeping previous logic)
+        
         if isinstance(rho_qobj, np.ndarray):
             try:
                 if rho_qobj.ndim == 2 and rho_qobj.shape[0] == rho_qobj.shape[1]:
                     dim_size = rho_qobj.shape[0]
                     num_qubits_inferred = 0
-                    if dim_size > 0 and (dim_size & (dim_size - 1) == 0): # Check if power of 2
+                    if dim_size > 0 and (dim_size & (dim_size - 1) == 0): 
                          num_qubits_inferred = int(np.log2(dim_size))
 
                     if num_qubits_inferred > 0 :
                         qubit_dims = [2] * num_qubits_inferred
                         dims = [qubit_dims, qubit_dims]
-                    else: # Fallback for non-qubit systems or non-power-of-2 dimensions
+                    else: 
                         dims = [[dim_size],[dim_size]]
                     rho_qobj = qutip.Qobj(rho_qobj, dims=dims)
                 else:
@@ -126,7 +126,7 @@ def analyze_density_matrix_pca(rho_qobj, state_name="State"):
 
     print(f"\n--- PCA Analysis for: {state_name} ---")
     print(f"Density Matrix (dims={rho_qobj.dims}, shape={rho_qobj.shape})")
-    # Avoid printing full matrix for N_QUBITS >= 4 (16x16 or larger)
+    
     if N_QUBITS < 4:
         print(rho_qobj.full().round(4))
     else:
@@ -137,7 +137,7 @@ def analyze_density_matrix_pca(rho_qobj, state_name="State"):
     if not np.isclose(tr, 1.0): print(f"Warning: Trace of {state_name} is not 1.")
     if not herm: print(f"Warning: {state_name} is not Hermitian.")
 
-    # For very large matrices, eigvalsh might be faster if we only need eigenvalues for check
+    
     start_time_eigcheck = time.time()
     raw_eig_check = np.linalg.eigvalsh(rho_qobj.full())
     end_time_eigcheck = time.time()
@@ -167,11 +167,11 @@ def analyze_density_matrix_pca(rho_qobj, state_name="State"):
 
     return sorted_eigenvalues, sorted_eigenvectors, rho_qobj
 
-# --- Section 3: PCA Demo with N-Qubit GHZ State and Noise ---
+
 print(f"\n\n--- Section 3: PCA Demo with {N_QUBITS}-Qubit GHZ State and Noise ---")
 print(f"Goal: Demonstrate PCA's power on a high-dimensional ({N_QUBITS}-qubit) entangled state subjected to noise.")
 
-# Step A: Define "true" N-qubit GHZ state
+
 print(f"\nStep A: Define Original True {N_QUBITS}-Qubit State (ρ_true_{N_QUBITS}q)")
 ghz_Nq_ket = (ket_all_zeros + ket_all_ones).unit()
 rho_true_Nq = qutip.ket2dm(ghz_Nq_ket)
@@ -182,16 +182,14 @@ if eigvals_true_Nq is not None:
     plot_eigenvalue_spectrum(eigvals_true_Nq, f"ρ_true_{N_QUBITS}q (GHZ State)")
     plot_cumulative_eigenvalues(eigvals_true_Nq, f"ρ_true_{N_QUBITS}q (GHZ State)")
     print(f"  Interpretation of ρ_true_{N_QUBITS}q: Pure GHZ state (Purity ≈ 1), one dominant eigenvalue ≈ 1.")
-    # For GHZ, its dominant eigenvector is the GHZ state itself.
-    # We can check fidelity of the numerically found dominant eigenvector with the defined GHZ ket
+    
     if eigvecs_true_Nq:
         fid_eigvec_ghz = qutip.fidelity(eigvecs_true_Nq[0], ghz_Nq_ket)
         print(f"  Fidelity of dominant eigenvector of ρ_true with the defined GHZ ket: {fid_eigvec_ghz**2:.6f} (should be ~1.0)")
 
 
-# Step B: Simulate Noise - Apply a depolarizing channel
 print(f"\nStep B: Simulate Noise - Apply Depolarizing Channel to ρ_true_{N_QUBITS}q")
-noise_probability = 0.5 # Make noise more significant for 10 qubits to see spread
+noise_probability = 0.5 # Make noise 
 rho_noisy_Nq = (1 - noise_probability) * rho_true_Nq + noise_probability * (identity_Nq / D_HILBERT)
 
 print(f"\nAnalyzing Noisy {N_QUBITS}-Qubit Density Matrix (ρ_noisy_{N_QUBITS}q) after {noise_probability*100}% depolarizing noise:")
@@ -210,7 +208,7 @@ if eigvals_noisy_Nq is not None:
         print(f"  This indicates if the 'main feature' picked by PCA still resembles the original GHZ structure.")
 
 
-# Step C: "Filter" by PCA - Approximate ρ_noisy_Nq using its dominant component
+
 print(f"\nStep C: 'Filter' ρ_noisy_{N_QUBITS}q using its Dominant PCA Component (ρ_filtered_pure_approx_{N_QUBITS}q)")
 rho_filtered_pure_approximation_Nq = None # Initialize
 if eigvals_noisy_Nq is not None and len(eigvals_noisy_Nq) > 0:
@@ -227,7 +225,7 @@ if eigvals_noisy_Nq is not None and len(eigvals_noisy_Nq) > 0:
 else:
     print(f"Skipped filtering as PCA on ρ_noisy_{N_QUBITS}q failed or yielded no components.")
 
-# Step D: Compare Results using Fidelity
+
 print(f"\nStep D: Compare States using Fidelity - Highlighting PCA's Advantages for {N_QUBITS} Qubits")
 if rho_true_Nq is not None and rho_noisy_Nq_analyzed is not None:
     fidelity_true_vs_noisy_Nq = qutip.fidelity(rho_true_Nq, rho_noisy_Nq_analyzed)
@@ -257,4 +255,3 @@ if rho_noisy_Nq_analyzed is not None and rho_filtered_pure_approximation_Nq is n
     print(f"   This shows the PCA-filtered pure state captures {eigvals_noisy_Nq[0]:.2%} of the character of the full noisy state.")
 
 
-# End of script
